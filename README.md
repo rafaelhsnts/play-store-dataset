@@ -24,7 +24,6 @@ Minimum Installs: Número mínimo total de instalações.
 Price: Preço do aplicativo.  
 Size: Tamanho do aplicativo.  
 Minimum Android: Versão mínima do sistema Android.  
-Content Rating: Classificação etária.  
 Ad Supported: Indicador de suporte a propagandas dentro do aplicativo.  
 In App Purchases: Indicador de compras dentro do aplicativo.  
 Editors Choice: Aplicativos indicados pelos editores.   
@@ -36,15 +35,27 @@ Editors Choice: Aplicativos indicados pelos editores.
 * numpy
 * pandas 
 * seaborn
+* streamlit
 
 ## **Estrutura do projeto**
 
 ```
 play_store_dataset
 ├── README.md
+├── app
+│   └── google_play_streamlit_app.py
 ├── notebooks
 │   └── google_play_store_apps.ipynb
-└── requirements.txt
+├── requirements.txt
+└── src
+    ├── __init__.py
+    ├── dados
+    │   ├── processed
+    │   │   └── play_store_app_processed.csv
+    │   └── raw
+    │       ├── play_store_app_raw.csv
+    │       └── play_store_app_raw_sample.csv
+    └── google_play_cleaner.py
 ```
 
 ## **Como executar**
