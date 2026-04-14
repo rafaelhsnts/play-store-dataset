@@ -20,6 +20,7 @@ url_processed_drive = f"https://drive.google.com/uc?id={FILE_ID_PROCESSED}"
 def load_raw():
     output = "./src/dados/raw/play_store_app_raw_sample.csv"
     if not os.path.exists(output):
+        os.makedirs(os.path.dirname(output), exist_ok=True)
         gdown.download(url_raw_drive, output, quiet=False)
     return pd.read_csv(output)
         
