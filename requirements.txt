@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 gdown==6.0.0
+=======
+gdown
+>>>>>>> e1660c5 (fix: fix crash when loading dataset in Streamlit app)
 matplotlib==3.10.7
 numpy==2.3.5
 pandas==2.3.3
