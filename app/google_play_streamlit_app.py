@@ -5,25 +5,27 @@ import seaborn as sns
 import os
 import sys
 import streamlit as st
+import gdown
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import src.google_play_cleaner as cleaner
 
 st.set_page_config(layout="wide")
 
-path_raw = "src/dados/raw/play_store_app_raw_sample.csv"
-path_processed = "src/dados/processed/play_store_app_processed.csv"
+FILE_ID_RAW = "19_TStrigv0hPwvGz-7ALGIUMBVkzcNNz"
+FILE_ID_PROCESSED = "10WPRO9Jl0h3v1HFLZtLC7MyAThPe3TVD"
+url_raw_drive = f"https://drive.google.com/uc?export=download&id={FILE_ID_RAW}"
+url_processed_drive = f"https://drive.google.com/uc?id={FILE_ID_PROCESSED}"
 
 @st.cache_data
 def load_raw():
-    df_raw = pd.read_csv(path_raw)
-    return df_raw
-
+    output = "./src/dados/raw/play_store_app_raw_sample.csv"
+    if not os.path.exists(output):
+        gdown.download(url_raw_drive, output, quiet=False)
+    return pd.read_csv(output)
+        
 @st.cache_data
 def process_data(df_raw, verbose=False):
     df, logs = cleaner.df_cleaner(df_raw, verbose)
-    if not os.path.exists(path_processed):
-        os.makedirs("src/dados/processed", exist_ok=True)
-        df.to_csv(path_processed, index=False)
     return df, logs
 
 st.sidebar.title("Menu")
@@ -70,7 +72,7 @@ if menu == "Sobre os dados":
 
     st.markdown("<br>", unsafe_allow_html=True)
     df_raw = load_raw()
-    st.dataframe(df_raw.head(100000))
+    st.dataframe(df_raw.head(1000))
 
     st.markdown("""
     ## **Objetivo da Análise**
@@ -112,9 +114,7 @@ if menu == "Sobre os dados":
     A relação entre Editors Choice e Rating não apresentou diferenças relevantes. Entretanto aplicativos destacados pela curadoria, demonstram um maior volume de instalações, indicando maior alcance e popularidade.  
     A análise das variável Ad Supported e In App Purchases em relação a variável Rating mostrou que, não há diferenças significativas entre as medianas das avaliações de aplicativos com e sem esses recursos. Contudo, a distribuição dos 50% centrais é mais consistente quando esses mecanismos de monetização estão presentes.  
     Por fim, a relação entre Minimum Android e Size indica uma tendência de aumento no tamanho dos aplicativos, à medida que versões mais recentes do sistema Android são exigidas, sugerindo maior demanda por recursos.
-    """)
-    st.write(df_raw.columns)
-    
+    """)    
 
 if menu == "Tratamento dos dados":
     df_raw = load_raw()
@@ -134,11 +134,10 @@ if menu == "Tratamento dos dados":
     st.info(f"O DataFrame possui **{df.shape[0]} linhas** e **{df.shape[1]} colunas**")
 
 if menu == "Visualizações":
+    col1, col2, col3 = st.columns([1,2,1])
+    df_raw = load_raw()
+    df, _ = process_data(df_raw)
 
-    if not os.path.exists(path_processed):
-        df_raw = load_raw()
-        df, _ = process_data(df_raw)
-    df = pd.read_csv(path_processed)
     if graph == "Preço por categoria":
         df2 = df[df["Price (USD)"] > 0].copy()
         cat_price = df2.groupby(["Category"])["Price (USD)"].agg(["mean", "median"]).reset_index().sort_values("mean", ascending=False)
@@ -147,7 +146,8 @@ if menu == "Visualizações":
         sns.barplot(data=cat_long, x="Price (USD)", y="Category", hue="Metric")
         plt.title("Price (USD) x Category", fontweight="bold")
         plt.legend(title="Statistic")
-        st.pyplot(fig)
+        with col2:
+            st.pyplot(fig)
         st.markdown("<br/>", unsafe_allow_html=True)
         st.markdown("""
         A análise da variável **Price (USD)** em relação a **Category** mostra que, entre as categorias de aplicativos, as medianas de preço são semelhantes, enquanto as médias apresentam grande variação.  
@@ -164,7 +164,8 @@ if menu == "Visualizações":
         plt.xlabel("Minimum Installs (log)")
         plt.ylim(0, 10)
         plt.yticks(np.arange(0, 10, .5))
-        st.pyplot(fig)
+        with col2:
+            st.pyplot(fig)
         st.markdown("<br/>", unsafe_allow_html=True)
         st.markdown("""
         A análise da variável **Minimum Installs** em escala logarítmica em relação a **Price (USD)** indica que existe uma relação negativa entre o preço e número de instalações. Esse resultado sugere que aplicativos com valor de venda elevado, são adquiridos com menor frequência na loja.
@@ -177,7 +178,8 @@ if menu == "Visualizações":
         plt.title("Editors Choice x Price (USD - log scale)", fontweight="bold")
         plt.ylabel("Price (USD - log scale)")
         plt.yscale("log")
-        st.pyplot(fig)
+        with col2:
+            st.pyplot(fig)
         st.markdown("<br/>", unsafe_allow_html=True)
         st.markdown("""
         A análise da variáveis **Editors Choice** em relação a **Price (USD)** em escala logarítmica mostra que, a mediana de aplicativos destacados como **Editors Choice**, é superior à dos aplicativos não destacados. Esse resultado indica que, em geral, os aplicativos selecionados pelos editores apresentam valores mais elevados na região central da distribuição.
@@ -192,7 +194,8 @@ if menu == "Visualizações":
         plt.title("Type x Size (MB - log scale)", fontweight="bold")
         plt.yscale("log")
         plt.ylabel("Size (MB - log)")
-        st.pyplot(fig)
+        with col2:
+            st.pyplot(fig)
         st.markdown("<br/>", unsafe_allow_html=True)
         st.markdown("""
         A análise da variável **Price (USD)** redistribuída nas categorias **Free** e **Paid** alocadas na coluna **Type** em relação a **Size (MB)** em escala logarítmica indica que, a mediana de tamanho entre aplicativos gratuitos e pagos é bastante semelhante. A dispersão dos 50% centrais (IQR) também apresenta valores próximos, embora a dispersão entre os aplicativos pagos seja ligeiramente maior.  
@@ -209,7 +212,8 @@ if menu == "Visualizações":
         sns.barplot(data=df2, x="Editors Choice", y="Minimum Installs", ax=axs[1])
         axs[1].set_title("Editors Choice x Minimum Installs", fontweight="bold")
         axs[1].set(yscale="log", ylabel="Minimum Installs (log)", ylim=(10**0, 10**8))
-        st.pyplot(fig)
+        with col2:
+            st.pyplot(fig)
         st.markdown("<br/>", unsafe_allow_html=True)
         st.markdown("""
         A análise da variável **Editors Choice** em relação a **Rating**, indica que não há diferença aparente entre aplicativos padrão e destacados, embora estes apresentem uma pontuação ligeiramente melhor.  
@@ -224,7 +228,8 @@ if menu == "Visualizações":
         axs[0].set(title="Ad Supported x Rating")
         sns.boxplot(data=df2, x="In App Purchases", y="Rating", ax=axs[1])
         axs[1].set(title="In app purchases x Rating")
-        st.pyplot(fig)
+        with col2:
+            st.pyplot(fig)
         st.markdown("<br/>", unsafe_allow_html=True)
         st.markdown("""
         A análise da variável **Ad Supported ** em relação a **Rating** indica que, a mediana das avaliações é semelhante entre aplicativos com e sem anúncios. No entanto, aplicativos suportados por anúncios apresentam um intervalo interquartil (IQR) ligeiramente mais estreito, indicando maior consistência nas avaliações, enquanto aplicativos sem anúncios demonstram maior variabilidade.  
@@ -239,7 +244,8 @@ if menu == "Visualizações":
         fig = plt.figure(figsize=(10, 8))
         sns.barplot(data=df2, x="Minimum Android", y="Size (MB)")
         plt.title("Minimum Android x Size (MB)")
-        st.pyplot(fig)
+        with col2:
+            st.pyplot(fig)
         st.markdown("<br/>", unsafe_allow_html=True)
         st.markdown("""
         A análise da variável **Minimum Android** em relação a **Size (MB)** indicam uma tendência de aumento no tamanho médio dos aplicativos conforme cresce a versão mínima exigida do sistema.  
